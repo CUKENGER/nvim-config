@@ -19,7 +19,7 @@ map({ "n", "x" }, "<Up>", "v:count == 0 ? 'gk' : 'k'", { desc = "Up", expr = tru
 
 -- Открыть Neotree слева
 map("n", "<leader>e", function()
-  vim.cmd("Neotree position=float reveal")
+  vim.cmd("Neotree reveal")
 end, { desc = "Neotree (left)" })
 
 -- Splits
@@ -35,20 +35,24 @@ map("n", "<leader>bo", ":BufferLineCloseOthers<CR>", { desc = "Close others" })
 -- LSP
 map("n", "<leader>ld", vim.diagnostic.open_float, { desc = "Line Diagnostics" })
 map("n", "<leader>lm", ":TSToolsAddMissingImports<CR>", { desc = "Add Missing Imports" })
-map("n", "gr", vim.lsp.buf.references, { desc = "References" })
-map("n", "gd", vim.lsp.buf.definition, { desc = "Go to Definition" })
+-- map("n", "gr", vim.lsp.buf.references, { desc = "References" })
+-- map("n", "gd", vim.lsp.buf.definition, { desc = "Go to Definition" })
 map("n", "<leader>lr", vim.lsp.buf.rename, { desc = "Rename" })
 
 -- Telescope
 local builtin = require("telescope.builtin")
 
-map("n", "<leader>ff", builtin.find_files, { desc = "Telescope find files" })
-map("n", "<leader>fw", builtin.live_grep, { desc = "Telescope live grep" })
+map("n", "<leader><leader>", builtin.find_files, { desc = "Telescope find files" })
+map("n", "<leader>f/", builtin.live_grep, { desc = "Telescope live grep" })
 map("n", "<leader>fb", builtin.buffers, { desc = "Telescope buffers" })
 map("n", "<leader>fh", builtin.help_tags, { desc = "Telescope help tags" })
 
 map("n", "gr", builtin.lsp_references, { noremap = true, silent = true, desc = "References" })
 map("n", "gd", builtin.lsp_definitions, { noremap = true, silent = true, desc = "Definitions" })
+
+
+-- conform
+-- map("n", "<leader>lf", vim.lsp.buf.format(), { noremap = true, silent = true, desc = "Format" })
 
 
 local wk = require("which-key")
