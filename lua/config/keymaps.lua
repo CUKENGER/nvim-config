@@ -50,9 +50,22 @@ map("n", "<leader>fh", builtin.help_tags, { desc = "Telescope help tags" })
 map("n", "gr", builtin.lsp_references, { noremap = true, silent = true, desc = "References" })
 map("n", "gd", builtin.lsp_definitions, { noremap = true, silent = true, desc = "Definitions" })
 
-
+map("n", "<leader>rp", ":%s/\\<<C-r><C-w>\\>/<C-r>\"/g<CR>", { noremap = true, desc = "Replace all" })
+map("v", "<leader>p", '"_dP', { noremap = true, silent = true, desc = "Paste without yank" })
 -- conform
 -- map("n", "<leader>lf", vim.lsp.buf.format(), { noremap = true, silent = true, desc = "Format" })
+
+-- load the session for the current directory
+vim.keymap.set("n", "<leader>ss", function() require("persistence").load() end, {desc = "Load the session for the current directory"})
+
+-- select a session to load
+vim.keymap.set("n", "<leader>sS", function() require("persistence").select() end, {desc = "Select a session to load"})
+
+-- load the last session
+vim.keymap.set("n", "<leader>sl", function() require("persistence").load({ last = true }) end, {desc = "Last session"})
+
+-- stop Persistence => session won't be saved on exit
+vim.keymap.set("n", "<leader>sd", function() require("persistence").stop() end, {desc = "Session won't be saved"})
 
 
 local wk = require("which-key")

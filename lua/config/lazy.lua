@@ -23,7 +23,7 @@ vim.g.maplocalleader = "\\"
 
 -- Setup lazy.nvim
 require("lazy").setup({
-	"JoosepAlviste/nvim-ts-context-commentstring",
+	{ "JoosepAlviste/nvim-ts-context-commentstring" },
 	rocks = {
 		enabled = false, -- отключить поддержку luarocks
 	},
