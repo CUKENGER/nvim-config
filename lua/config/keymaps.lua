@@ -47,12 +47,55 @@ map("n", "<leader>f/", builtin.live_grep, { desc = "Telescope live grep" })
 map("n", "<leader>fb", builtin.buffers, { desc = "Telescope buffers" })
 map("n", "<leader>fh", builtin.help_tags, { desc = "Telescope help tags" })
 
-map("n", "gr", builtin.lsp_references, { noremap = true, silent = true, desc = "References" })
+-- map("n", "gr", builtin.lsp_references, { noremap = true, silent = true, desc = "References" })
 local telescope = require("telescope.builtin")
 
 vim.keymap.set("n", "gd", function()
 	telescope.lsp_definitions({})
 end, { noremap = true, silent = true, desc = "Definitions" })
+
+local actions = require("telescope.actions")
+local action_state = require("telescope.actions.state")
+
+vim.keymap.set("n", "gr", function()
+	telescope.lsp_references({
+		-- Обработка результатов
+		entry_maker = function(entry)
+			return {
+				value = entry,
+				display = string.format("%s:%d - %s", entry.filename, entry.lnum, entry.text),
+				ordinal = entry.filename .. ":" .. entry.lnum, -- Для сортировки
+				filename = entry.filename,
+				lnum = entry.lnum,
+				col = entry.col,
+			}
+		end,
+		-- Фильтрация и сортировка
+		results_processor = function(results)
+			local filtered = {}
+			local seen = {}
+			for _, result in ipairs(results) do
+				local key = result.filename .. ":" .. result.lnum .. ":" .. result.col
+				if not seen[key] then
+					table.insert(filtered, result)
+					seen[key] = true
+				end
+			end
+			-- Сортировка по имени файла
+			table.sort(filtered, function(a, b)
+				return a.filename < b.filename
+			end)
+			return filtered
+		end,
+		-- Дополнительные настройки отображения
+		layout_strategy = "vertical",
+		layout_config = {
+			prompt_position = "top",
+			height = 0.8,
+			width = 0.8,
+		},
+	})
+end, { noremap = true, silent = true, desc = "References" })
 
 map("n", "<leader>rp", ':%s/\\<<C-r><C-w>\\>/<C-r>"/g<CR>', { noremap = true, desc = "Replace all" })
 map("v", "<leader>p", '"_dP', { noremap = true, silent = true, desc = "Paste without yank" })
@@ -119,5 +162,5 @@ wk.add({
 	{ "<Down>", "v:count == 0 ? 'gj' : 'j'", desc = "Down", mode = { "n", "x" }, expr = true, silent = true },
 	{ "k", "v:count == 0 ? 'gk' : 'k'", desc = "Up", mode = { "n", "x" }, expr = true, silent = true },
 	{ "<Up>", "v:count == 0 ? 'gk' : 'k'", desc = "Up", mode = { "n", "x" }, expr = true, silent = true },
-	{ "gr", "<cmd>lua vim.lsp.buf.references()<cr>", desc = "References" },
+	-- { "gr", "<cmd>lua vim.lsp.buf.references()<cr>", desc = "References" },
 }, { prefix = "<leader>" })

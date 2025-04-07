@@ -21,7 +21,7 @@ vim.opt.softtabstop = 2
 
 -- Other
 vim.opt.scrolloff = 8
-vim.opt.wrap = false
+vim.opt.wrap = true
 
 vim.opt.termguicolors = true
 
@@ -39,3 +39,4 @@ vim.opt.fillchars = {
 
 
 vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
+

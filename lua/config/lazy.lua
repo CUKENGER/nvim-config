@@ -48,4 +48,7 @@ require("lazy").setup({
 			indent = { enable = true },
 		})
 	end,
+	ui = {
+		border = "rounded", -- Закруглённые углы для UI Lazy
+	},
 })
