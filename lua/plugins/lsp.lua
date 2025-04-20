@@ -3,7 +3,9 @@ return {
 	{
 		"williamboman/mason.nvim",
 		config = function()
-			require("mason").setup()
+			require("mason").setup({
+				ensure_installed = { "eslint", "prettierd", "stylua" }, -- Форматировщики
+			})
 		end,
 	},
 
@@ -13,7 +15,8 @@ return {
 		dependencies = { "williamboman/mason.nvim" },
 		config = function()
 			require("mason-lspconfig").setup({
-				ensure_installed = { "lua_ls", "rust_analyzer", "tailwindcss", "emmet_ls", "ts_ls" },
+				-- ensure_installed = { "lua_ls", "rust_analyzer", "tailwindcss", "emmet_ls", "ts_ls" },
+				ensure_installed = { "lua_ls", "rust_analyzer", "tailwindcss", "emmet_ls" },
 			})
 		end,
 	},
@@ -80,10 +83,16 @@ return {
 				end,
 				settings = {
 					-- Настройки для TypeScript
+					separate_diagnostic_server = false,
+					tsserver_max_memory = 1024, -- Ограничение памяти до 1 ГБ
 					tsserver_file_preferences = {
-						includeInlayParameterNameHints = "all",
-						includeInlayFunctionLikeReturnTypeHints = true,
+						includeInlayParameterNameHints = "literals", -- Менее ресурсоемко, чем "all"
+						includeInlayFunctionLikeReturnTypeHints = false, -- Отключаем для скорости
 					},
+					-- tsserver_file_preferences = {
+					-- 	includeInlayParameterNameHints = "all",
+					-- 	includeInlayFunctionLikeReturnTypeHints = true,
+					-- },
 				},
 			})
 
@@ -122,7 +131,12 @@ return {
 	{
 		"luckasRanarison/tailwind-tools.nvim",
 		dependencies = { "nvim-treesitter/nvim-treesitter", "neovim/nvim-lspconfig" },
-		opts = {},
+		opts = {
+			document_color = {
+				enabled = true,
+				kind = "inline", -- Легче, чем "foreground"
+			},
+		},
 	},
 
 	-- CSS Var Viewer
@@ -138,9 +152,13 @@ return {
 		build = ":TSUpdate",
 		config = function()
 			require("nvim-treesitter.configs").setup({
-				ensure_installed = { "javascript", "typescript", "tsx", "css", "scss" },
-				highlight = { enable = true },
+				ensure_installed = { "javascript", "typescript", "tsx", "css", "scss", "html", "lua" },
+				highlight = {
+					enable = true,
+					additional_vim_regex_highlighting = false, -- Ускоряет работу
+				},
 				autotag = { enable = true },
+				incremental_selection = { enable = false }, -- Отключаем, если не используете
 			})
 		end,
 	},

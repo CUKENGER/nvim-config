@@ -3,9 +3,9 @@ vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.cursorline = true
 
-vim.o.signcolumn = 'auto' -- this is what you seem to be using.
--- vim.o.signcolumn = 3 -- will use 3 columns. 
-vim.o.signcolumn = 'number'
+-- vim.o.signcolumn = 'auto' -- this is what you seem to be using.
+vim.o.signcolumn = 'yes:1' -- will use 3 columns. 
+-- vim.o.signcolumn = 'number'
 
 -- Mouse
 vim.opt.mouse = "a"

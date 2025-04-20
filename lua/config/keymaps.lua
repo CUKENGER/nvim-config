@@ -1,7 +1,7 @@
 local map = vim.keymap.set
 
 map("i", "jk", "<Esc>", { desc = "Esc" })
-map("n", "q", "<Esc>", { desc = "Esc" })
+-- map("n", "q", "<Esc>", { desc = "Esc" })
 
 map("n", "<leader>qq", ":qa! <CR>", { desc = "Quit" })
 
@@ -31,9 +31,64 @@ map("n", "<Tab>", ":BufferLineCycleNext<CR>", { desc = "Next tab" })
 map("n", "<s-Tab>", ":BufferLineCyclePrev<CR>", { desc = "Prev tab" })
 map("n", "<leader>xx", ":BufferLinePickClose<CR>", { desc = "Pick tab to close" })
 map("n", "<leader>bo", ":BufferLineCloseOthers<CR>", { desc = "Close others" })
+map("n", "<leader>bd", ":bdelete<CR>", { desc = "Close current" })
 
 -- LSP
 map("n", "<leader>ld", vim.diagnostic.open_float, { desc = "Line Diagnostics" })
+local function open_diagnostic_float()
+	local diagnostics = vim.diagnostic.get(0, { lnum = vim.api.nvim_win_get_cursor(0)[1] - 1 })
+	if #diagnostics == 0 then
+		print("No diagnostics found at the current line")
+		return
+	end
+
+	local float_buf = vim.diagnostic.open_float({
+		border = "rounded",
+		scope = "line",
+		source = "always",
+		header = "Diagnostics:",
+		prefix = function(diagnostic, i)
+			local icon = diagnostic.severity == vim.diagnostic.severity.ERROR and " "
+				or diagnostic.severity == vim.diagnostic.severity.WARN and " "
+				or " "
+			return string.format("%d. %s", i, icon)
+		end,
+		format = function(diagnostic)
+			return string.format("%s: %s", diagnostic.source or "LSP", diagnostic.message)
+		end,
+		max_width = 80,
+		focusable = true,
+		close_events = { "BufLeave", "CursorMoved" },
+	})
+
+	if float_buf then
+		-- Переключаем фокус на плавающее окно
+		vim.api.nvim_set_current_win(float_win)
+
+		-- Привязка q для закрытия окна
+		vim.api.nvim_buf_set_keymap(float_buf, "n", "q", "<cmd>q<CR>", { noremap = true, silent = true })
+
+		-- Привязка для копирования диагностик
+		vim.api.nvim_buf_set_keymap(float_buf, "n", "y", "", {
+			noremap = true,
+			silent = true,
+			callback = function()
+				local lines = {}
+				for _, diagnostic in ipairs(diagnostics) do
+					local message = string.format("%s: %s", diagnostic.source or "LSP", diagnostic.message)
+					table.insert(lines, message)
+				end
+				vim.fn.setreg("+", table.concat(lines, "\n"))
+				print("Diagnostics copied to clipboard")
+			end,
+		})
+
+		-- Подсветка уровней серьезности
+		vim.api.nvim_buf_add_highlight(float_buf, -1, "DiagnosticError", 0, 0, -1)
+	end
+end
+
+-- vim.keymap.set("n", "<leader>ld", open_diagnostic_float, { desc = "Line Diagnostics" })
 map("n", "<leader>lm", ":TSToolsAddMissingImports<CR>", { desc = "Add Missing Imports" })
 -- map("n", "gr", vim.lsp.buf.references, { desc = "References" })
 -- map("n", "gd", vim.lsp.buf.definition, { desc = "Go to Definition" })
@@ -122,7 +177,21 @@ vim.keymap.set("n", "<leader>sd", function()
 	require("persistence").stop()
 end, { desc = "Session won't be saved" })
 
-vim.keymap.set("n", "<leader>nh", ":nohlsearch<CR>", { noremap = true, silent = true, desc = "No Highlight" })
+vim.keymap.set("n", "<Esc>", ":nohlsearch<CR>", { noremap = true, silent = true, desc = "No Highlight" })
+
+vim.keymap.set("n", "<leader>tt", "<cmd>TroubleToggle<CR>", { desc = "Toggle Trouble" })
+vim.keymap.set("n", "<leader>tw", "<cmd>Trouble workspace_diagnostics<CR>", { desc = "Workspace Diagnostics" })
+vim.keymap.set("n", "<leader>td", "<cmd>Trouble document_diagnostics<CR>", { desc = "Document Diagnostics" })
+vim.keymap.set("n", "<leader>tq", "<cmd>Trouble quickfix<CR>", { desc = "Quickfix List" })
+vim.keymap.set("n", "<leader>tl", "<cmd>Trouble loclist<CR>", { desc = "Location List" })
+
+-- Переход к диагностикам
+map("n", "]e", function()
+	vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })
+end, { desc = "Next Error" })
+map("n", "[e", function()
+	vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
+end, { desc = "Previous Error" })
 
 local wk = require("which-key")
 
@@ -136,7 +205,7 @@ wk.add({
 	{ "<leader>fh", "<cmd>Telescope help_tags<cr>", desc = "Find Help Tags" },
 	{ "<leader>l", group = "LSP" },
 	{ "<leader>la", "<cmd>lua vim.lsp.buf.code_action()<cr>", desc = "Code Actions" },
-	{ "<leader>ld", "<cmd>lua vim.diagnostic.open_float()<cr>", desc = "Line Diagnostics" },
+	-- { "<leader>ld", "<cmd>lua vim.diagnostic.open_float()<cr>", desc = "Line Diagnostics" },
 	{ "<leader>lm", "<cmd>TSToolsAddMissingImports<CR>", desc = "Add Missing Imports" },
 	{ "<leader>lr", "<cmd>lua vim.lsp.buf.rename()<cr>", desc = "Rename" },
 	{ "<leader>w", proxy = "<c-w>", group = "windows" }, -- proxy to window mappings
@@ -147,7 +216,7 @@ wk.add({
 			return require("which-key.extras").expand.buf()
 		end,
 	},
-	{ "<leader>q", "<cmd>qa!<cr>", desc = "Quit" },
+	-- { "<leader>q", "<cmd>qa!<cr>", desc = "Quit" },
 	{ "<leader>xx", "<cmd>BufferLinePickClose<cr>", desc = "Pick tab to close" },
 	{ "<leader>bo", "<cmd>BufferLineCloseOthers<cr>", desc = "Close others" },
 	{ "<Tab>", "<cmd>BufferLineCycleNext<cr>", desc = "Next tab" },
@@ -162,5 +231,11 @@ wk.add({
 	{ "<Down>", "v:count == 0 ? 'gj' : 'j'", desc = "Down", mode = { "n", "x" }, expr = true, silent = true },
 	{ "k", "v:count == 0 ? 'gk' : 'k'", desc = "Up", mode = { "n", "x" }, expr = true, silent = true },
 	{ "<Up>", "v:count == 0 ? 'gk' : 'k'", desc = "Up", mode = { "n", "x" }, expr = true, silent = true },
+	{ "<leader>t", group = "Trouble" },
+	{ "<leader>tt", "<cmd>TroubleToggle<CR>", desc = "Toggle Trouble" },
+	{ "<leader>tw", "<cmd>Trouble workspace_diagnostics<CR>", desc = "Workspace Diagnostics" },
+	{ "<leader>td", "<cmd>Trouble document_diagnostics<CR>", desc = "Document Diagnostics" },
+	{ "<leader>tq", "<cmd>Trouble quickfix<CR>", desc = "Quickfix" },
+	{ "<leader>tl", "<cmd>Trouble loclist<CR>", desc = "Location List" },
 	-- { "gr", "<cmd>lua vim.lsp.buf.references()<cr>", desc = "References" },
 }, { prefix = "<leader>" })

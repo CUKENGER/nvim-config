@@ -28,6 +28,32 @@ return {
 					show_buffer_close_icons = true, -- Показывать иконки закрытия буфера
 					show_close_icon = false, -- Не показывать общую иконку закрытия
 					separator_style = "thin", -- Стиль разделителя вкладок
+					always_show_bufferline = true, -- Показывать bufferline даже с одним буфером
+					enforce_regular_tabs = true,
+					-- Добавляем безопасное закрытие буфера
+					close_command = function(bufnum)
+						-- Проверяем количество буферов
+						local buffers = vim.fn.len(vim.fn.getbufinfo({ buflisted = 1 }))
+						if buffers > 1 then
+							vim.api.nvim_buf_delete(bufnum, { force = true })
+						else
+							-- Если это последний буфер, создаем пустой
+							vim.cmd("enew")
+						end
+					end,
+					-- Включаем поддержку мыши
+					mouse = {
+						enabled = true,
+						-- Определяем действие для крестика
+						close = function(bufnum)
+							local buffers = vim.fn.len(vim.fn.getbufinfo({ buflisted = 1 }))
+							if buffers > 1 then
+								vim.api.nvim_buf_delete(bufnum, { force = true })
+							else
+								vim.cmd("enew")
+							end
+						end,
+					},
 				},
 				highlights = {
 					modified = {
