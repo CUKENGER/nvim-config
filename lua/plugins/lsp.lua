@@ -4,7 +4,11 @@ return {
 		"williamboman/mason.nvim",
 		config = function()
 			require("mason").setup({
-				ensure_installed = { "eslint", "prettierd", "stylua" }, -- Форматировщики
+				ensure_installed = { 
+					"eslint", 
+					"prettierd",
+				-- "stylua" 
+			}, -- Форматировщики
 			})
 		end,
 	},
@@ -16,7 +20,12 @@ return {
 		config = function()
 			require("mason-lspconfig").setup({
 				-- ensure_installed = { "lua_ls", "rust_analyzer", "tailwindcss", "emmet_ls", "ts_ls" },
-				ensure_installed = { "lua_ls", "rust_analyzer", "tailwindcss", "emmet_ls" },
+				ensure_installed = { 
+					-- "lua_ls", 
+					-- "rust_analyzer", 
+					-- "tailwindcss", 
+					"emmet_ls" 
+				},
 			})
 		end,
 	},
@@ -34,22 +43,22 @@ return {
 			local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
 			-- Кастомный сервер для cssmodules
-			lspconfig.util.default_config = vim.tbl_extend("force", lspconfig.util.default_config, {
-				cssmodules = {
-					cmd = { "cssmodules-language-server" },
-					filetypes = {
-						"css",
-						"scss",
-						"sass",
-						"javascript",
-						"javascriptreact",
-						"typescript",
-						"typescriptreact",
-					},
-					root_dir = lspconfig.util.root_pattern("package.json", ".git"),
-					init_options = { camelCase = true },
-				},
-			})
+			-- lspconfig.util.default_config = vim.tbl_extend("force", lspconfig.util.default_config, {
+			-- 	cssmodules = {
+			-- 		cmd = { "cssmodules-language-server" },
+			-- 		filetypes = {
+			-- 			"css",
+			-- 			"scss",
+			-- 			"sass",
+			-- 			"javascript",
+			-- 			"javascriptreact",
+			-- 			"typescript",
+			-- 			"typescriptreact",
+			-- 		},
+			-- 		root_dir = lspconfig.util.root_pattern("package.json", ".git"),
+			-- 		init_options = { camelCase = true },
+			-- 	},
+			-- })
 
 			-- lspconfig.cssmodules.setup({
 			--   capabilities = capabilities,
@@ -121,8 +130,8 @@ return {
 				},
 			})
 
-			lspconfig.lua_ls.setup({ capabilities = capabilities })
-			lspconfig.rust_analyzer.setup({ capabilities = capabilities })
+			-- lspconfig.lua_ls.setup({ capabilities = capabilities })
+			-- lspconfig.rust_analyzer.setup({ capabilities = capabilities })
 			lspconfig.emmet_ls.setup({ capabilities = capabilities })
 		end,
 	},
@@ -133,8 +142,9 @@ return {
 		dependencies = { "nvim-treesitter/nvim-treesitter", "neovim/nvim-lspconfig" },
 		opts = {
 			document_color = {
-				enabled = true,
-				kind = "inline", -- Легче, чем "foreground"
+				-- enabled = true,
+				enabled = false,
+				-- kind = "inline", -- Легче, чем "foreground"
 			},
 		},
 	},
@@ -156,6 +166,13 @@ return {
 				highlight = {
 					enable = true,
 					additional_vim_regex_highlighting = false, -- Ускоряет работу
+					disable = function(lang, buf)
+            local max_filesize = 100 * 1024 -- 100 KB
+            local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
+            if ok and stats and stats.size > max_filesize then
+              return true
+            end
+          end,
 				},
 				autotag = { enable = true },
 				incremental_selection = { enable = false }, -- Отключаем, если не используете
@@ -187,15 +204,15 @@ return {
 	},
 
 	-- Emmet
-	{
-		"olrtg/nvim-emmet",
-	},
+	-- {
+	-- 	"olrtg/nvim-emmet",
+	-- },
 
 	-- Форматирование (через Mason)
-	{
-		"williamboman/mason.nvim",
-		opts = {
-			ensure_installed = { "eslint", "prettierd", "stylua" }, -- Исправлено "eslint-lsp" на "eslint"
-		},
-	},
+	-- {
+	-- 	"williamboman/mason.nvim",
+	-- 	opts = {
+	-- 		ensure_installed = { "eslint", "prettierd", "stylua" }, -- Исправлено "eslint-lsp" на "eslint"
+	-- 	},
+	-- },
 }

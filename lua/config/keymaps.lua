@@ -3,7 +3,7 @@ local map = vim.keymap.set
 map("i", "jk", "<Esc>", { desc = "Esc" })
 -- map("n", "q", "<Esc>", { desc = "Esc" })
 
-map("n", "<leader>qq", ":qa! <CR>", { desc = "Quit" })
+map("n", "<leader>qq", ":q <CR>", { desc = "Quit" })
 
 -- Navigation
 map("n", "<c-k>", ":wincmd k<CR>", { desc = "Switch up" })

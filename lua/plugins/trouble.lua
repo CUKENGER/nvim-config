@@ -1,18 +1,49 @@
 return {
-  "folke/trouble.nvim",
-  dependencies = { "nvim-tree/nvim-web-devicons" },
-  opts = {
-    position = "bottom", -- Расположение панели
-    height = 10, -- Высота панели
-    icons = true, -- Использовать иконки
-    mode = "workspace_diagnostics", -- По умолчанию показывать диагностику всего проекта
-    fold_open = "▾", -- Символ для открытых узлов
-    fold_closed = "▸", -- Символ для закрытых узлов
-    action_keys = {
-      close = "q", -- Закрыть Trouble клавишей q
-      cancel = "<esc>", -- Отмена
-      jump = { "<cr>", "<tab>" }, -- Перейти к ошибке
+  {
+    "dmmulroy/tsc.nvim",
+    config = function()
+      require("tsc").setup({
+        auto_open_qflist = false,
+        use_trouble_qflist = true, -- отправляет ошибки в Trouble
+      })
+    end,
+  },
+  {
+    "folke/trouble.nvim",
+    cmd = "Trouble",
+    -- opts will be merged with the parent spec
+    opts = { use_diagnostic_signs = true },
+    keys = {
+      {
+        "<leader>tx",
+        "<cmd>Trouble diagnostics toggle<cr>",
+        desc = "Diagnostics (Trouble)",
+      },
+      {
+        "<leader>xX",
+        "<cmd>Trouble diagnostics toggle filter.buf=0<cr>",
+        desc = "Buffer Diagnostics (Trouble)",
+      },
+      {
+        "<leader>cs",
+        "<cmd>Trouble symbols toggle focus=false<cr>",
+        desc = "Symbols (Trouble)",
+      },
+      {
+        "<leader>cl",
+        "<cmd>Trouble lsp toggle focus=false win.position=right<cr>",
+        desc = "LSP Definitions / references / ... (Trouble)",
+      },
+      {
+        "<leader>xL",
+        "<cmd>Trouble loclist toggle<cr>",
+        desc = "Location List (Trouble)",
+      },
+      {
+        "<leader>xQ",
+        "<cmd>Trouble qflist toggle<cr>",
+        desc = "Quickfix List (Trouble)",
+      },
     },
-    auto_close = true, -- Автозакрытие при отсутствии диагностики
   },
 }

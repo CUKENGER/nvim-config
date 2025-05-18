@@ -23,10 +23,10 @@ return {
 				},
 				filesystem = {
 					follow_current_file = {
-						enabled = true, -- Подсвечивать текущий файл
+						enabled = true,   -- Подсвечивать текущий файл
 						leave_dirs_open = true, -- Оставлять директории открытыми
 					},
-					hijack_netrw_behavior = "open_default", -- Заменить Netrw
+					-- hijack_netrw_behavior = "disabled",
 					use_libuv_file_watcher = true, -- Автообновление при изменении файлов
 				},
 				event_handlers = {

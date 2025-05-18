@@ -40,3 +40,13 @@ vim.opt.fillchars = {
 
 vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 
+vim.opt.backup = true
+vim.opt.backupdir = vim.fn.stdpath('data') .. '/backup'
+vim.opt.swapfile = true
+vim.opt.undofile = true
+vim.opt.undodir = vim.fn.stdpath('data') .. '/undo'
+
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+
+
