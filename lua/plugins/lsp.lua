@@ -4,11 +4,11 @@ return {
 		"williamboman/mason.nvim",
 		config = function()
 			require("mason").setup({
-				ensure_installed = { 
-					"eslint", 
+				ensure_installed = {
+					"eslint",
 					"prettierd",
-				-- "stylua" 
-			}, -- Форматировщики
+					-- "stylua"
+				}, -- Форматировщики
 			})
 		end,
 	},
@@ -20,11 +20,11 @@ return {
 		config = function()
 			require("mason-lspconfig").setup({
 				-- ensure_installed = { "lua_ls", "rust_analyzer", "tailwindcss", "emmet_ls", "ts_ls" },
-				ensure_installed = { 
-					-- "lua_ls", 
-					-- "rust_analyzer", 
-					-- "tailwindcss", 
-					"emmet_ls" 
+				ensure_installed = {
+					-- "lua_ls",
+					-- "rust_analyzer",
+					-- "tailwindcss",
+					"emmet_ls",
 				},
 			})
 		end,
@@ -130,6 +130,22 @@ return {
 				},
 			})
 
+			lspconfig.eslint_d.setup({
+				on_attach = function(client, bufnr)
+					vim.api.nvim_create_autocmd("BufWritePre", {
+						buffer = bufnr,
+						command = "EslintFixAll",
+					})
+				end,
+				settings = {
+					format = true,
+					codeAction = {
+						disableRuleComment = { enable = true, location = "separateLine" },
+						showDocumentation = { enable = true },
+					},
+				},
+			})
+
 			-- lspconfig.lua_ls.setup({ capabilities = capabilities })
 			-- lspconfig.rust_analyzer.setup({ capabilities = capabilities })
 			lspconfig.emmet_ls.setup({ capabilities = capabilities })
@@ -167,12 +183,12 @@ return {
 					enable = true,
 					additional_vim_regex_highlighting = false, -- Ускоряет работу
 					disable = function(lang, buf)
-            local max_filesize = 100 * 1024 -- 100 KB
-            local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
-            if ok and stats and stats.size > max_filesize then
-              return true
-            end
-          end,
+						local max_filesize = 100 * 1024 -- 100 KB
+						local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
+						if ok and stats and stats.size > max_filesize then
+							return true
+						end
+					end,
 				},
 				autotag = { enable = true },
 				incremental_selection = { enable = false }, -- Отключаем, если не используете
@@ -201,6 +217,23 @@ return {
 		"pmizio/typescript-tools.nvim",
 		dependencies = { "nvim-lua/plenary.nvim", "neovim/nvim-lspconfig" },
 		opts = {},
+	},
+
+	{
+		"mfussenegger/nvim-lint",
+		config = function()
+			require("lint").linters_by_ft = {
+				javascript = { "eslint_d" },
+				typescript = { "eslint_d" },
+				javascriptreact = { "eslint_d" },
+				typescriptreact = { "eslint_d" },
+			}
+			vim.api.nvim_create_autocmd({ "BufWritePost", "BufEnter" }, {
+				callback = function()
+					require("lint").try_lint()
+				end,
+			})
+		end,
 	},
 
 	-- Emmet

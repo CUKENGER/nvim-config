@@ -25,8 +25,8 @@ return {
 							padding = 1,
 						},
 					},
-					show_buffer_close_icons = true, -- Показывать иконки закрытия буфера
-					show_close_icon = false, -- Не показывать общую иконку закрытия
+					-- show_buffer_close_icons = true, -- Показывать иконки закрытия буфера
+					-- show_close_icon = true, -- Не показывать общую иконку закрытия
 					separator_style = "thin", -- Стиль разделителя вкладок
 					always_show_bufferline = true, -- Показывать bufferline даже с одним буфером
 					enforce_regular_tabs = true,
@@ -41,6 +41,32 @@ return {
 							vim.cmd("enew")
 						end
 					end,
+					-- Кастомное форматирование имени буфера
+          name_formatter = function(buf)
+            local name = buf.name
+            local path = buf.path
+            -- Проверяем, является ли файл index с любым расширением
+            if name:match("^index%.") then
+              -- Пробуем извлечь путь начиная с `features`
+              local relative_path = path:match(".*/features/(.+)/index%.(.+)")
+              if relative_path then
+                -- Возвращаем путь вида `LoginForm/ui/index.tsx`
+                return relative_path .. "/index." .. name:match("index%.(.+)")
+              end
+              -- Если `features` нет, берём последние две папки
+              local parent_path = path:match(".*/([^/]+/[^/]+)/index%.(.+)")
+              if parent_path then
+                return parent_path .. "/index." .. name:match("index%.(.+)")
+              end
+              -- Если и это не удалось, берём одну папку
+              local parent = path:match(".*/([^/]+)/index%.(.+)")
+              if parent then
+                return parent .. "/index." .. name:match("index%.(.+)")
+              end
+            end
+            -- Для остальных файлов возвращаем только имя
+            return name
+          end,
 					-- Включаем поддержку мыши
 					mouse = {
 						enabled = true,

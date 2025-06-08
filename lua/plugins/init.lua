@@ -10,10 +10,28 @@ return {
 		},
 	},
 	{
-		"nvim-lua/plenary.nvim",
-		"nvim-telescope/telescope.nvim",
-		"cljoly/telescope-repo.nvim",
-	},
+    "cljoly/telescope-repo.nvim",
+    dependencies = { "nvim-telescope/telescope.nvim" },
+  },
+{
+  "nvim-telescope/telescope.nvim",
+  dependencies = { "nvim-lua/plenary.nvim" },
+  config = function()
+    require("telescope").setup({
+      defaults = {
+        layout_strategy = "vertical",
+        layout_config = { prompt_position = "top" },
+      },
+      pickers = {
+        lsp_code_actions = {
+          theme = "dropdown",
+          previewer = false,
+          layout_config = { width = 0.5, height = 0.4 },
+        },
+      },
+    })
+  end,
+},
 	{
 		"utilyre/barbecue.nvim",
 		name = "barbecue",
@@ -62,6 +80,7 @@ return {
 			},
 		},
 	},
+	{'ojroques/nvim-bufdel'},
 	{
 		"pocco81/auto-save.nvim",
 		event = { "InsertLeave", "TextChanged" },

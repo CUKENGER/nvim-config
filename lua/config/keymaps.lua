@@ -31,71 +31,163 @@ map("n", "<Tab>", ":BufferLineCycleNext<CR>", { desc = "Next tab" })
 map("n", "<s-Tab>", ":BufferLineCyclePrev<CR>", { desc = "Prev tab" })
 map("n", "<leader>xx", ":BufferLinePickClose<CR>", { desc = "Pick tab to close" })
 map("n", "<leader>bo", ":BufferLineCloseOthers<CR>", { desc = "Close others" })
-map("n", "<leader>bd", ":bdelete<CR>", { desc = "Close current" })
+-- map("n", "<leader>bd", ":bdelete<CR>", { desc = "Close current" })
+map("n", "<leader>bd", ":BufDel<CR>", { desc = "Close current buffer" })
+map('n', '<leader>la', '<cmd>lua vim.lsp.buf.code_action()<CR>', { noremap = true, silent = true })
+-- map("n", "<leader>bc", ":BufferLineClose<CR>", { desc = "Close current bud buffer" })
 
 -- LSP
-map("n", "<leader>ld", vim.diagnostic.open_float, { desc = "Line Diagnostics" })
+-- map("n", "<leader>ld", vim.diagnostic.open_float, { desc = "Line Diagnostics" })
+
+-- Функция для улучшенного окна диагностик
 local function open_diagnostic_float()
-	local diagnostics = vim.diagnostic.get(0, { lnum = vim.api.nvim_win_get_cursor(0)[1] - 1 })
-	if #diagnostics == 0 then
-		print("No diagnostics found at the current line")
-		return
-	end
+  local diagnostics = vim.diagnostic.get(0, { lnum = vim.api.nvim_win_get_cursor(0)[1] - 1 })
+  if #diagnostics == 0 then
+    vim.notify("Нет диагностик на текущей строке", vim.log.levels.INFO)
+    return
+  end
 
-	local float_buf = vim.diagnostic.open_float({
-		border = "rounded",
-		scope = "line",
-		source = "always",
-		header = "Diagnostics:",
-		prefix = function(diagnostic, i)
-			local icon = diagnostic.severity == vim.diagnostic.severity.ERROR and " "
-				or diagnostic.severity == vim.diagnostic.severity.WARN and " "
-				or " "
-			return string.format("%d. %s", i, icon)
-		end,
-		format = function(diagnostic)
-			return string.format("%s: %s", diagnostic.source or "LSP", diagnostic.message)
-		end,
-		max_width = 80,
-		focusable = true,
-		close_events = { "BufLeave", "CursorMoved" },
-	})
+  local float_buf, float_win = vim.diagnostic.open_float({
+    border = "rounded",
+    scope = "line",
+    source = "always",
+    header = { " Диагностика ", "DiagnosticHeader" },
+    prefix = function(diagnostic, i)
+      local icon = diagnostic.severity == vim.diagnostic.severity.ERROR and " "
+        or diagnostic.severity == vim.diagnostic.severity.WARN and " "
+        or diagnostic.severity == vim.diagnostic.severity.INFO and " "
+        or " "
+      return string.format("%d. %s", i, icon)
+    end,
+    format = function(diagnostic)
+      local message = diagnostic.message:gsub("\n", " "):sub(1, 70)
+      return string.format("%s: %s", diagnostic.source or "LSP", message)
+    end,
+    max_width = 80,
+    max_height = math.min(#diagnostics + 2, 10),
+    focusable = true,
+    -- Убрали close_events, окно закрывается только явно
+  })
 
-	if float_buf then
-		-- Переключаем фокус на плавающее окно
-		vim.api.nvim_set_current_win(float_win)
+  if not float_buf or not float_win then
+    vim.notify("Не удалось открыть окно диагностики", vim.log.levels.ERROR)
+    return
+  end
 
-		-- Привязка q для закрытия окна
-		vim.api.nvim_buf_set_keymap(float_buf, "n", "q", "<cmd>q<CR>", { noremap = true, silent = true })
+  -- Переключаем фокус на окно диагностик
+  vim.api.nvim_set_current_win(float_win)
 
-		-- Привязка для копирования диагностик
-		vim.api.nvim_buf_set_keymap(float_buf, "n", "y", "", {
-			noremap = true,
-			silent = true,
-			callback = function()
-				local lines = {}
-				for _, diagnostic in ipairs(diagnostics) do
-					local message = string.format("%s: %s", diagnostic.source or "LSP", diagnostic.message)
-					table.insert(lines, message)
-				end
-				vim.fn.setreg("+", table.concat(lines, "\n"))
-				print("Diagnostics copied to clipboard")
-			end,
-		})
+  -- Настройка клавиш
+  vim.api.nvim_buf_set_keymap(float_buf, "n", "q", "<cmd>q<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(float_buf, "n", "y", "", {
+    noremap = true,
+    silent = true,
+    callback = function()
+      local lines = {}
+      for i, diagnostic in ipairs(diagnostics) do
+        local icon = diagnostic.severity == vim.diagnostic.severity.ERROR and "ERROR"
+          or diagnostic.severity == vim.diagnostic.severity.WARN and "WARN"
+          or diagnostic.severity == vim.diagnostic.severity.INFO and "INFO"
+          or "HINT"
+        local message = string.format("[%s] %s: %s", icon, diagnostic.source or "LSP", diagnostic.message)
+        table.insert(lines, message)
+      end
+      vim.fn.setreg("+", table.concat(lines, "\n"))
+      vim.notify("Диагностики скопированы", vim.log.levels.INFO)
+    end,
+  })
+  vim.api.nvim_buf_set_keymap(float_buf, "n", "j", "<Down>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(float_buf, "n", "k", "<Up>", { noremap = true, silent = true })
 
-		-- Подсветка уровней серьезности
-		vim.api.nvim_buf_add_highlight(float_buf, -1, "DiagnosticError", 0, 0, -1)
-	end
+  -- Подсветка
+  for i, diagnostic in ipairs(diagnostics) do
+    local hl_group = diagnostic.severity == vim.diagnostic.severity.ERROR and "DiagnosticError"
+      or diagnostic.severity == vim.diagnostic.severity.WARN and "DiagnosticWarn"
+      or diagnostic.severity == vim.diagnostic.severity.INFO and "DiagnosticInfo"
+      or "DiagnosticHint"
+    vim.api.nvim_buf_add_highlight(float_buf, -1, hl_group, i - 1, 0, -1)
+  end
 end
+
+-- Функция для улучшенного окна диагностик
+local function open_diagnostic_float()
+  local diagnostics = vim.diagnostic.get(0, { lnum = vim.api.nvim_win_get_cursor(0)[1] - 1 })
+  if #diagnostics == 0 then
+    vim.notify("Нет диагностик на текущей строке", vim.log.levels.INFO)
+    return
+  end
+
+  local float_buf, float_win = vim.diagnostic.open_float({
+    border = "rounded",
+    scope = "line",
+    source = "always",
+    header = { " Диагностика ", "DiagnosticHeader" },
+    prefix = function(diagnostic, i)
+      local icon = diagnostic.severity == vim.diagnostic.severity.ERROR and " "
+        or diagnostic.severity == vim.diagnostic.severity.WARN and " "
+        or diagnostic.severity == vim.diagnostic.severity.INFO and " "
+        or " "
+      return string.format("%d. %s", i, icon)
+    end,
+    format = function(diagnostic)
+      local message = diagnostic.message:gsub("\n", " "):sub(1, 70)
+      return string.format("%s: %s", diagnostic.source or "LSP", message)
+    end,
+    max_width = 80,
+    max_height = math.min(#diagnostics + 2, 10),
+    focusable = true,
+    -- Убрали close_events, окно закрывается только явно
+  })
+
+  if not float_buf or not float_win then
+    vim.notify("Не удалось открыть окно диагностики", vim.log.levels.ERROR)
+    return
+  end
+
+  -- Переключаем фокус на окно диагностик
+  vim.api.nvim_set_current_win(float_win)
+
+  -- Настройка клавиш
+  vim.api.nvim_buf_set_keymap(float_buf, "n", "q", "<cmd>q<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(float_buf, "n", "y", "", {
+    noremap = true,
+    silent = true,
+    callback = function()
+      local lines = {}
+      for i, diagnostic in ipairs(diagnostics) do
+        local icon = diagnostic.severity == vim.diagnostic.severity.ERROR and "ERROR"
+          or diagnostic.severity == vim.diagnostic.severity.WARN and "WARN"
+          or diagnostic.severity == vim.diagnostic.severity.INFO and "INFO"
+          or "HINT"
+        local message = string.format("[%s] %s: %s", icon, diagnostic.source or "LSP", diagnostic.message)
+        table.insert(lines, message)
+      end
+      vim.fn.setreg("+", table.concat(lines, "\n"))
+      vim.notify("Диагностики скопированы", vim.log.levels.INFO)
+    end,
+  })
+  vim.api.nvim_buf_set_keymap(float_buf, "n", "j", "<Down>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(float_buf, "n", "k", "<Up>", { noremap = true, silent = true })
+
+  -- Подсветка
+  for i, diagnostic in ipairs(diagnostics) do
+    local hl_group = diagnostic.severity == vim.diagnostic.severity.ERROR and "DiagnosticError"
+      or diagnostic.severity == vim.diagnostic.severity.WARN and "DiagnosticWarn"
+      or diagnostic.severity == vim.diagnostic.severity.INFO and "DiagnosticInfo"
+      or "DiagnosticHint"
+    vim.api.nvim_buf_add_highlight(float_buf, -1, hl_group, i - 1, 0, -1)
+  end
+end
+
+local builtin = require("telescope.builtin")
+
+map("n", "<leader>ld", open_diagnostic_float, { desc = "Показать диагностику строки" })
 
 -- vim.keymap.set("n", "<leader>ld", open_diagnostic_float, { desc = "Line Diagnostics" })
 map("n", "<leader>lm", ":TSToolsAddMissingImports<CR>", { desc = "Add Missing Imports" })
 -- map("n", "gr", vim.lsp.buf.references, { desc = "References" })
 -- map("n", "gd", vim.lsp.buf.definition, { desc = "Go to Definition" })
 map("n", "<leader>lr", vim.lsp.buf.rename, { desc = "Rename" })
-
--- Telescope
-local builtin = require("telescope.builtin")
 
 map("n", "<leader><leader>", builtin.find_files, { desc = "Telescope find files" })
 map("n", "<leader>f/", builtin.live_grep, { desc = "Telescope live grep" })
@@ -204,7 +296,7 @@ wk.add({
 	{ "<leader>fg", "<cmd>Telescope live_grep<cr>", desc = "Live Grep" },
 	{ "<leader>fh", "<cmd>Telescope help_tags<cr>", desc = "Find Help Tags" },
 	{ "<leader>l", group = "LSP" },
-	{ "<leader>la", "<cmd>lua vim.lsp.buf.code_action()<cr>", desc = "Code Actions" },
+	-- { "<leader>la", "<cmd>lua vim.lsp.buf.code_action()<cr>", desc = "Code Actions" },
 	-- { "<leader>ld", "<cmd>lua vim.diagnostic.open_float()<cr>", desc = "Line Diagnostics" },
 	{ "<leader>lm", "<cmd>TSToolsAddMissingImports<CR>", desc = "Add Missing Imports" },
 	{ "<leader>lr", "<cmd>lua vim.lsp.buf.rename()<cr>", desc = "Rename" },
@@ -219,6 +311,7 @@ wk.add({
 	-- { "<leader>q", "<cmd>qa!<cr>", desc = "Quit" },
 	{ "<leader>xx", "<cmd>BufferLinePickClose<cr>", desc = "Pick tab to close" },
 	{ "<leader>bo", "<cmd>BufferLineCloseOthers<cr>", desc = "Close others" },
+	{ "<leader>bd", desc = "Close current buffer" },
 	{ "<Tab>", "<cmd>BufferLineCycleNext<cr>", desc = "Next tab" },
 	{ "<s-Tab>", "<cmd>BufferLineCyclePrev<cr>", desc = "Prev tab" },
 	{ "|", "<cmd>vsplit<cr>", desc = "Split horizontal" },

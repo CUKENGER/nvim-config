@@ -14,11 +14,11 @@ return {
 				numhl = false, -- Подсвечивать номера строк (опционально)
 				linehl = false, -- Подсвечивать измененные строки (опционально)
 				word_diff = false, -- Подсвечивать изменения внутри строки
-				highlight_groups = {
-					GitSignsAddLn = { guibg = "#d7ffaf" }, -- Зеленый фон для добавленных строк
-					GitSignsChangeLn = { guibg = "#d7d7ff" }, -- Синий фон для измененных строк
-					GitSignsDeleteLn = { guibg = "#ffafaf" }, -- Красный фон для удаленных строк
-				},
+				-- highlight_groups = {
+				-- 	GitSignsAddLn = { guibg = "#d7ffaf" }, -- Зеленый фон для добавленных строк
+				-- 	GitSignsChangeLn = { guibg = "#d7d7ff" }, -- Синий фон для измененных строк
+				-- 	GitSignsDeleteLn = { guibg = "#ffafaf" }, -- Красный фон для удаленных строк
+				-- },
 				on_attach = function(bufnr)
 					local gs = package.loaded.gitsigns
 

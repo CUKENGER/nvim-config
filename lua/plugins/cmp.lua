@@ -1,13 +1,30 @@
 return {
 	{
+  'windwp/nvim-autopairs',
+  event = 'InsertEnter',
+  config = function()
+    require('nvim-autopairs').setup {
+      check_ts = true, -- Интеграция с treesitter, если он у тебя есть
+      disable_filetype = { 'TelescopePrompt', 'vim' }, -- Отключение для определенных типов файлов
+      fast_wrap = {}, -- Быстрое оборачивание
+    }
+    -- Интеграция с nvim-cmp
+    local cmp_autopairs = require('nvim-autopairs.completion.cmp')
+    local cmp = require('cmp')
+    cmp.event:on('confirm_done', cmp_autopairs.on_confirm_done())
+  end
+},
+	{
 		"hrsh7th/nvim-cmp",
 		dependencies = {
 			"hrsh7th/cmp-nvim-lsp",
 			"hrsh7th/cmp-buffer",
+			"hrsh7th/cmp-cmdline",
 			"hrsh7th/cmp-path",
 			"hrsh7th/cmp-vsnip",
 			"hrsh7th/vim-vsnip",
 			"windwp/nvim-autopairs",
+			"hrsh7th/cmp-cmdline",
 		},
 		config = function()
 			local cmp = require("cmp")
@@ -21,8 +38,14 @@ return {
 					end,
 				},
 				window = {
-					completion = cmp.config.window.bordered(),
-					documentation = cmp.config.window.bordered(),
+					completion = cmp.config.window.bordered({
+            border = "rounded",
+            winhighlight = "Normal:Normal,FloatBorder:BorderBG,CursorLine:PmenuSel,Search:None",
+          }),
+          documentation = cmp.config.window.bordered({
+            border = "rounded",
+            winhighlight = "Normal:Normal,FloatBorder:BorderBG",
+          }),
 				},
 				mapping = cmp.mapping.preset.insert({
 					["<Tab>"] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Select }),
@@ -32,17 +55,48 @@ return {
 					["<CR>"] = cmp.mapping.confirm({ select = false }), -- Только явный выбор
 				}),
 				sources = cmp.config.sources({
-					{ name = "nvim_lsp", max_item_count = 10 },
-					{ name = "vsnip",    max_item_count = 5 },
-				}, {
-					{ name = "buffer", max_item_count = 5, option = { keyword_length = 3 } },
-					{ name = "path",   max_item_count = 5 },
-				}),
+          { name = "nvim_lsp", max_item_count = 15, priority = 1000 }, -- LSP приоритетнее
+          { name = "vsnip", max_item_count = 5, priority = 800 }, -- Сниппеты
+          -- { name = "luasnip", max_item_count = 5, priority = 800 }, -- LuaSnip (если используешь)
+          { name = "path", max_item_count = 5, priority = 600 }, -- Пути файлов
+        }, {
+          { name = "buffer", max_item_count = 5, priority = 400, option = { keyword_length = 3 } }, -- Буфер
+        }),
+				formatting = {
+          -- format = lspkind.cmp_format({
+          --   mode = "symbol_text", -- Иконка + текст
+          --   maxwidth = 50, -- Ограничение ширины
+          --   ellipsis_char = "...", -- Сокращение длинных элементов
+          --   menu = { -- Метки источников
+          --     nvim_lsp = "[LSP]",
+          --     vsnip = "[Snippet]",
+          --     luasnip = "[LuaSnip]",
+          --     buffer = "[Buffer]",
+          --     path = "[Path]",
+          --     cmdline = "[Cmd]",
+          --   },
+          -- }),
+        },
+				sorting = {
+          priority_weight = 2,
+          comparators = {
+            cmp.config.compare.offset, -- Ближайшие к курсору
+            cmp.config.compare.exact, -- Точные совпадения
+            cmp.config.compare.score, -- Оценка релевантности
+            cmp.config.compare.recently_used, -- Недавно использованные
+            cmp.config.compare.locality, -- Локальные элементы
+            cmp.config.compare.kind, -- Тип (функции, переменные)
+            cmp.config.compare.sort_text, -- Алфавитный порядок
+            cmp.config.compare.length, -- Короткие предложения
+            cmp.config.compare.order, -- Порядок по умолчанию
+          },
+        },
 				performance = {
-					debounce = 150,
-					throttle = 100,
-					fetching_timeout = 200,
-				},
+          debounce = 60, -- Снижено для скорости
+          throttle = 30, -- Снижено для отзывчивости
+          fetching_timeout = 150, -- Уменьшено для быстрого ответа
+          max_view_entries = 20, -- Ограничение отображаемых предложений
+        },
 			})
 
 			-- Командная строка
@@ -52,13 +106,18 @@ return {
 			})
 
 			cmp.setup.cmdline(":", {
-				mapping = cmp.mapping.preset.cmdline(),
-				sources = cmp.config.sources({
-					{ name = "path", max_item_count = 5 },
-				}, {
-					{ name = "cmdline", max_item_count = 5 },
-				}),
-			})
+        mapping = cmp.mapping.preset.cmdline(),
+        sources = cmp.config.sources({
+          { name = "path", max_item_count = 5 },
+          { name = "cmdline", max_item_count = 5 },
+        }),
+      })
+
+			local capabilities = require("cmp_nvim_lsp").default_capabilities()
+      require("lspconfig")["emmet_ls"].setup({
+        capabilities = capabilities,
+        filetypes = { "html", "typescriptreact", "javascriptreact", "css", "scss" }, -- Поддержка React
+      })
 		end,
 	},
 }
