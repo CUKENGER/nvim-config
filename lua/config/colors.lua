@@ -8,4 +8,5 @@ function SetColor(color)
 	vim.api.nvim_set_hl(0, "LineNr", { fg = "#6B7280", bg = "none" })
 end
 
-SetColor("vscode_modern")
+-- SetColor("vscode_modern")
+SetColor("onedark")

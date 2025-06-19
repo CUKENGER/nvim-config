@@ -5,7 +5,7 @@ return {
 		config = function()
 			require("mason").setup({
 				ensure_installed = {
-					"eslint",
+					"eslint_d",
 					"prettierd",
 					-- "stylua"
 				}, -- Форматировщики
@@ -126,22 +126,6 @@ return {
 							templ = "html",
 							htmlangular = "html",
 						},
-					},
-				},
-			})
-
-			lspconfig.eslint_d.setup({
-				on_attach = function(client, bufnr)
-					vim.api.nvim_create_autocmd("BufWritePre", {
-						buffer = bufnr,
-						command = "EslintFixAll",
-					})
-				end,
-				settings = {
-					format = true,
-					codeAction = {
-						disableRuleComment = { enable = true, location = "separateLine" },
-						showDocumentation = { enable = true },
 					},
 				},
 			})
