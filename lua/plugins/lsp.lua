@@ -12,20 +12,25 @@ return {
 			})
 		end,
 	},
-
-	-- Mason-LSPConfig для автоматической установки LSP
+	--
+	-- -- Mason-LSPConfig для автоматической установки LSP
 	{
 		"williamboman/mason-lspconfig.nvim",
-		dependencies = { "williamboman/mason.nvim" },
+		dependencies = { "williamboman/mason.nvim", "neovim/nvim-lspconfig" },
 		config = function()
 			require("mason-lspconfig").setup({
-				-- ensure_installed = { "lua_ls", "rust_analyzer", "tailwindcss", "emmet_ls", "ts_ls" },
 				ensure_installed = {
-					-- "lua_ls",
-					-- "rust_analyzer",
-					-- "tailwindcss",
 					"emmet_ls",
+					"cssls",
+					"tailwindcss",
+					"css_variables",
+					"cssmodules_ls",
+					"harper_ls",
+					"jsonls",
+					"lua_ls",
+					"stylua",
 				},
+				automatic_installation = true,
 			})
 		end,
 	},
@@ -39,32 +44,10 @@ return {
 			"williamboman/mason-lspconfig.nvim",
 		},
 		config = function()
-			local lspconfig = require("lspconfig")
 			local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
-			-- Кастомный сервер для cssmodules
-			-- lspconfig.util.default_config = vim.tbl_extend("force", lspconfig.util.default_config, {
-			-- 	cssmodules = {
-			-- 		cmd = { "cssmodules-language-server" },
-			-- 		filetypes = {
-			-- 			"css",
-			-- 			"scss",
-			-- 			"sass",
-			-- 			"javascript",
-			-- 			"javascriptreact",
-			-- 			"typescript",
-			-- 			"typescriptreact",
-			-- 		},
-			-- 		root_dir = lspconfig.util.root_pattern("package.json", ".git"),
-			-- 		init_options = { camelCase = true },
-			-- 	},
-			-- })
-
-			-- lspconfig.cssmodules.setup({
-			--   capabilities = capabilities,
-			-- })
-
-			lspconfig.cssls.setup({
+			-- Настройка серверов
+			vim.lsp.config("cssls", {
 				capabilities = capabilities,
 				settings = {
 					css = { validate = true, lint = { unknownProperties = "warning" } },
@@ -72,40 +55,14 @@ return {
 					sass = { validate = true, lint = { unknownProperties = "warning" } },
 					less = { validate = true },
 				},
-				filetypes = { "css", "scss", "sass", "less" }, -- Убрали "cssmodules", так как он отдельно
-			})
-
-			-- lspconfig.ts_ls.setup({
-			-- 	capabilities = capabilities,
-			-- 	filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "jsx", "tsx" },
-			-- 	on_attach = function(client, bufnr)
-			-- 		print("TypeScript LSP attached")
-			-- 		client.server_capabilities.documentFormattingProvider = false
-			-- 	end,
-			-- })
-
-			require("typescript-tools").setup({
-				capabilities = require("cmp_nvim_lsp").default_capabilities(),
-				on_attach = function(client, bufnr)
-					print("TypeScript Tools LSP attached")
-					client.server_capabilities.documentFormattingProvider = false
+				filetypes = { "css", "scss", "sass", "less" },
+				root_dir = function(fname)
+					return vim.fs.root(0, { "package.json", ".git" }) or vim.fn.getcwd()
 				end,
-				settings = {
-					-- Настройки для TypeScript
-					separate_diagnostic_server = false,
-					tsserver_max_memory = 1024, -- Ограничение памяти до 1 ГБ
-					tsserver_file_preferences = {
-						includeInlayParameterNameHints = "literals", -- Менее ресурсоемко, чем "all"
-						includeInlayFunctionLikeReturnTypeHints = false, -- Отключаем для скорости
-					},
-					-- tsserver_file_preferences = {
-					-- 	includeInlayParameterNameHints = "all",
-					-- 	includeInlayFunctionLikeReturnTypeHints = true,
-					-- },
-				},
 			})
+			vim.lsp.enable({ "cssls" })
 
-			lspconfig.tailwindcss.setup({
+			vim.lsp.config("tailwindcss", {
 				capabilities = capabilities,
 				settings = {
 					tailwindCSS = {
@@ -125,36 +82,226 @@ return {
 							eruby = "erb",
 							templ = "html",
 							htmlangular = "html",
+							elixir = "phoenix-heex",
+							heex = "phoenix-heex",
 						},
 					},
 				},
+				filetypes = {
+					"aspnetcorerazor",
+					"astro",
+					"astro-markdown",
+					"blade",
+					"clojure",
+					"django-html",
+					"htmldjango",
+					"edge",
+					"eelixir",
+					"elixir",
+					"ejs",
+					"erb",
+					"eruby",
+					"gohtml",
+					"gohtmltmpl",
+					"haml",
+					"handlebars",
+					"hbs",
+					"html",
+					"htmlangular",
+					"html-eex",
+					"heex",
+					"jade",
+					"leaf",
+					"liquid",
+					"markdown",
+					"mdx",
+					"mustache",
+					"njk",
+					"nunjucks",
+					"php",
+					"razor",
+					"slim",
+					"twig",
+					"css",
+					"less",
+					"postcss",
+					"sass",
+					"scss",
+					"stylus",
+					"sugarss",
+					"javascript",
+					"javascriptreact",
+					"reason",
+					"rescript",
+					"typescript",
+					"typescriptreact",
+					"vue",
+					"svelte",
+					"templ",
+				},
+				root_dir = function(fname)
+					return vim.fs.root(0, { "package.json", ".git" }) or vim.fn.getcwd()
+				end,
 			})
+			vim.lsp.enable({ "tailwindcss" })
 
-			-- lspconfig.lua_ls.setup({ capabilities = capabilities })
-			-- lspconfig.rust_analyzer.setup({ capabilities = capabilities })
-			lspconfig.emmet_ls.setup({ capabilities = capabilities })
+			vim.lsp.config("emmet_ls", {
+				capabilities = capabilities,
+				filetypes = { "html", "typescriptreact", "javascriptreact", "css", "scss" },
+				root_dir = function(fname)
+					return vim.fs.root(0, { ".git" }) or vim.fn.getcwd()
+				end,
+			})
+			vim.lsp.enable({ "emmet_ls" })
+
+			vim.lsp.config("css_variables", {
+				capabilities = capabilities,
+				settings = {
+					cssVariables = {
+						lookupFiles = { "**/*.less", "**/*.scss", "**/*.sass", "**/*.css" },
+						blacklistFolders = {
+							"**/.cache",
+							"**/.DS_Store",
+							"**/.git",
+							"**/.hg",
+							"**/.next",
+							"**/.svn",
+							"**/bower_components",
+							"**/CVS",
+							"**/dist",
+							"**/node_modules",
+							"**/tests",
+							"**/tmp",
+						},
+					},
+				},
+				filetypes = { "css", "scss", "less" },
+				root_dir = function(fname)
+					return vim.fs.root(0, { "package.json", ".git" }) or vim.fn.getcwd()
+				end,
+			})
+			vim.lsp.enable({ "css_variables" })
+
+			vim.lsp.config("cssmodules_ls", {
+				capabilities = capabilities,
+				filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
+				root_dir = function(fname)
+					return vim.fs.root(0, { "package.json" }) or vim.fn.getcwd()
+				end,
+			})
+			vim.lsp.enable({ "cssmodules_ls" })
+
+			vim.lsp.config("harper_ls", {
+				capabilities = capabilities,
+				filetypes = {
+					"c",
+					"cpp",
+					"cs",
+					"gitcommit",
+					"go",
+					"html",
+					"java",
+					"javascript",
+					"lua",
+					"markdown",
+					"nix",
+					"python",
+					"ruby",
+					"rust",
+					"swift",
+					"toml",
+					"typescript",
+					"typescriptreact",
+					"haskell",
+					"cmake",
+					"typst",
+					"php",
+					"dart",
+					"clojure",
+					"sh",
+				},
+				root_dir = function(fname)
+					return vim.fs.root(0, { ".git" }) or vim.fn.getcwd()
+				end,
+			})
+			vim.lsp.enable({ "harper_ls" })
+
+			vim.lsp.config("jsonls", {
+				capabilities = capabilities,
+				filetypes = { "json", "jsonc" },
+				init_options = { provideFormatter = true },
+				root_dir = function(fname)
+					return vim.fs.root(0, { ".git" }) or vim.fn.getcwd()
+				end,
+			})
+			vim.lsp.enable({ "jsonls" })
+
+			vim.lsp.config("lua_ls", {
+				capabilities = capabilities,
+				filetypes = { "lua" },
+				root_dir = function(fname)
+					return vim.fs.root(
+						0,
+						{
+							".luarc.json",
+							".luarc.jsonc",
+							".luacheckrc",
+							".stylua.toml",
+							"stylua.toml",
+							"selene.toml",
+							"selene.yml",
+							".git",
+						}
+					) or vim.fn.getcwd()
+				end,
+			})
+			vim.lsp.enable({ "lua_ls" })
+
+			vim.lsp.config("stylua", {
+				capabilities = capabilities,
+				filetypes = { "lua" },
+				root_dir = function(fname)
+					return vim.fs.root(0, { ".stylua.toml", "stylua.toml", ".editorconfig" }) or vim.fn.getcwd()
+				end,
+			})
+			vim.lsp.enable({ "stylua" })
+
+			-- TypeScript через typescript-tools
+			require("typescript-tools").setup({
+				capabilities = capabilities,
+				on_attach = function(client, bufnr)
+					print("TypeScript Tools LSP attached")
+					client.server_capabilities.documentFormattingProvider = false
+				end,
+				settings = {
+					separate_diagnostic_server = false,
+					tsserver_max_memory = 1024,
+					tsserver_file_preferences = {
+						includeInlayParameterNameHints = "literals",
+						includeInlayFunctionLikeReturnTypeHints = false,
+					},
+				},
+			})
 		end,
 	},
 
 	-- Tailwind Tools
-	{
-		"luckasRanarison/tailwind-tools.nvim",
-		dependencies = { "nvim-treesitter/nvim-treesitter", "neovim/nvim-lspconfig" },
-		opts = {
-			document_color = {
-				-- enabled = true,
-				enabled = false,
-				-- kind = "inline", -- Легче, чем "foreground"
-			},
-		},
-	},
+	-- {
+	-- 	"luckasRanarison/tailwind-tools.nvim",
+	-- 	dependencies = { "nvim-treesitter/nvim-treesitter" },
+	-- 	opts = {
+	-- 		document_color = {
+	-- 			enabled = false,
+	-- 		},
+	-- 	},
+	-- },
 
 	-- CSS Var Viewer
-	{
-		"farias-hecdin/CSSVarViewer",
-		ft = "css",
-		config = true,
-	},
+	-- {
+	-- 	"farias-hecdin/CSSVarViewer",
+	-- 	ft = "css",
+	-- 	config = true,
+	-- },
 
 	-- Tree-sitter (необходим для autotag и tailwind-tools)
 	{
@@ -221,15 +368,15 @@ return {
 	},
 
 	-- Emmet
-	-- {
-	-- 	"olrtg/nvim-emmet",
-	-- },
+	{
+		"olrtg/nvim-emmet",
+	},
 
 	-- Форматирование (через Mason)
-	-- {
-	-- 	"williamboman/mason.nvim",
-	-- 	opts = {
-	-- 		ensure_installed = { "eslint", "prettierd", "stylua" }, -- Исправлено "eslint-lsp" на "eslint"
-	-- 	},
-	-- },
+	{
+		"williamboman/mason.nvim",
+		opts = {
+			ensure_installed = { "eslint", "prettierd", "stylua" }, -- Исправлено "eslint-lsp" на "eslint"
+		},
+	},
 }

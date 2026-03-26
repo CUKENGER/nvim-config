@@ -5,6 +5,8 @@ map("i", "jk", "<Esc>", { desc = "Esc" })
 
 map("n", "<leader>qq", ":q <CR>", { desc = "Quit" })
 
+map("n", "<leader>yy", ":%y<CR>", { desc = "Yank entire buffer" })
+
 -- Navigation
 map("n", "<c-k>", ":wincmd k<CR>", { desc = "Switch up" })
 map("n", "<c-j>", ":wincmd j<CR>", { desc = "Switch down" })
@@ -291,6 +293,18 @@ vim.keymap.set("n", "<leader>td", "<cmd>Trouble document_diagnostics<CR>", { des
 vim.keymap.set("n", "<leader>tq", "<cmd>Trouble quickfix<CR>", { desc = "Quickfix List" })
 vim.keymap.set("n", "<leader>tl", "<cmd>Trouble loclist<CR>", { desc = "Location List" })
 
+-- Поиск слова под курсором
+map("n", "<leader>fw", function()
+	local word = vim.fn.expand("<cword>")
+	require("telescope.builtin").live_grep({ default_text = word })
+end, { desc = "Live grep word under cursor" })
+
+-- Поиск выделенного слова в visual mode
+map("v", "<leader>fw", function()
+	local word = vim.fn.getreg('"')
+	require("telescope.builtin").live_grep({ default_text = word })
+end, { desc = "Live grep selected word" })
+
 -- Переход к диагностикам
 map("n", "]e", function()
 	vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })
@@ -306,7 +320,6 @@ wk.add({
 	{ "<leader>f", group = "Telescope" },
 	{ "<leader>fb", "<cmd>Telescope buffers<cr>", desc = "Find Buffers" },
 	{ "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Find Files" },
-	{ "<leader>fg", "<cmd>Telescope live_grep<cr>", desc = "Live Grep" },
 	{ "<leader>fh", "<cmd>Telescope help_tags<cr>", desc = "Find Help Tags" },
 	{ "<leader>l", group = "LSP" },
 	-- { "<leader>la", "<cmd>lua vim.lsp.buf.code_action()<cr>", desc = "Code Actions" },
