@@ -356,5 +356,7 @@ wk.add({
 	{ "<leader>td", "<cmd>Trouble document_diagnostics<CR>", desc = "Document Diagnostics" },
 	{ "<leader>tq", "<cmd>Trouble quickfix<CR>", desc = "Quickfix" },
 	{ "<leader>tl", "<cmd>Trouble loclist<CR>", desc = "Location List" },
+	{ "<leader>s", group = "session / save" },
+	{ "<leader>sa", "<cmd>ASToggle<CR>", desc = "Toggle AutoSave" },
 	-- { "gr", "<cmd>lua vim.lsp.buf.references()<cr>", desc = "References" },
 }, { prefix = "<leader>" })

@@ -19,6 +19,11 @@ return {
 		},
 	},
 
+
+
+
+
+
 	{ "Mofiqul/vscode.nvim" },
 	{
 		"folke/persistence.nvim",
@@ -58,36 +63,36 @@ return {
 		},
 	},
 	{'ojroques/nvim-bufdel'},
-	{
-		"pocco81/auto-save.nvim",
-		event = { "InsertLeave", "TextChanged" },
-		opts = {
-			enabled = true,                   -- Автосохранение включено по умолчанию
-			execution_message = {
-				message = function() return "" end, -- Отключено сообщение
-				dim = 0.18,
-				cleaning_interval = 1250,
-			},
-			trigger = {
-				events = { "TextChanged" },                  -- Сохранение при выходе из insert mode или изменении текста
-			},
-			condition = function(buf)                      -- Условие для сохранения
-				return vim.fn.getbufvar(buf, "&modifiable") == 1 -- Сохранять только изменяемые буферы
-						and vim.fn.bufname(buf) ~= ""            -- Игнорировать безымянные буферы
-			end,
-			write_all_buffers = false,                     -- Сохранять только текущий буфер
-			debounce_delay = 135,                          -- Задержка 135 мс для отложенного сохранения
-			debug = false,                                 -- Отключить отладочные логи
-		},
-		keys = {
-			{
-				"<leader>sa",
-				":AutoSaveToggle<CR>",
-				desc = "Toggle AutoSave",
-				mode = "n",
-			},
-		},
-	}
+	-- {
+	-- 	"pocco81/auto-save.nvim",
+	-- 	event = { "InsertLeave", "TextChanged" },
+	-- 	opts = {
+	-- 		enabled = true,                   -- Автосохранение включено по умолчанию
+	-- 		execution_message = {
+	-- 			message = function() return "" end, -- Отключено сообщение
+	-- 			dim = 0.18,
+	-- 			cleaning_interval = 1250,
+	-- 		},
+	-- 		trigger = {
+	-- 			events = { "TextChanged" },                  -- Сохранение при выходе из insert mode или изменении текста
+	-- 		},
+	-- 		condition = function(buf)                      -- Условие для сохранения
+	-- 			return vim.fn.getbufvar(buf, "&modifiable") == 1 -- Сохранять только изменяемые буферы
+	-- 					and vim.fn.bufname(buf) ~= ""            -- Игнорировать безымянные буферы
+	-- 		end,
+	-- 		write_all_buffers = false,                     -- Сохранять только текущий буфер
+	-- 		debounce_delay = 135,                          -- Задержка 135 мс для отложенного сохранения
+	-- 		debug = false,                                 -- Отключить отладочные логи
+	-- 	},
+	-- 	keys = {
+	-- 		{
+	-- 			"<leader>sa",
+	-- 			":AutoSaveToggle<CR>",
+	-- 			desc = "Toggle AutoSave",
+	-- 			mode = "n",
+	-- 		},
+	-- 	},
+	-- }
 	-- {
 	-- 	"goolord/alpha-nvim",
 	-- 	config = function()
