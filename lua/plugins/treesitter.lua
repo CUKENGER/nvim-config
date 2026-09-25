@@ -1,42 +1,42 @@
 return {
-  {
-    "nvim-treesitter/nvim-treesitter",
-    branch = "master",        -- важно после архивации
-    lazy = false,             -- грузим обязательно
-    build = ":TSUpdate",
-    priority = 1000,
+	{
+		"nvim-treesitter/nvim-treesitter",
+		build = ":TSUpdate",
+		event = { "BufReadPost", "BufNewFile" },
+		dependencies = {
+			"windwp/nvim-ts-autotag",
+		},
+		config = function()
+			require("nvim-treesitter.configs").setup({
+				ensure_installed = {
+					"lua",
+					"vimdoc",
+					"query",
+					"javascript",
+					"typescript",
+					"tsx",
+					"html",
+					"css",
+					"scss",
+					"json",
+					"markdown_inline",
+					"bash",
+				},
+				auto_install = true,
+				highlight = {
+					enable = true,
+					additional_vim_regex_highlighting = false,
+				},
+				indent = {
+					enable = true,
+				},
+			})
+		end,
+	},
 
-    config = function()
-      -- Защита от ошибки, если плагин ещё не полностью загрузился
-      local ok, configs = pcall(require, "nvim-treesitter.configs")
-      if not ok then
-        vim.notify("nvim-treesitter not ready yet, retrying...", vim.log.levels.WARN)
-        return
-      end
-
-      configs.setup({
-        ensure_installed = {
-          "typescript", "tsx", "javascript",
-          "json", "css", "scss", "html",
-          "lua", "markdown", "markdown_inline"
-        },
-
-        highlight = {
-          enable = true,
-          additional_vim_regex_highlighting = false,
-        },
-
-        indent = { enable = true },
-      })
-    end,
-  },
-
-  {
-    "windwp/nvim-ts-autotag",
-    dependencies = { "nvim-treesitter/nvim-treesitter" },
-    event = "InsertEnter",
-    config = function()
-      require("nvim-ts-autotag").setup({})
-    end,
-  },
+	-- Автозакрытие и переименование HTML/JSX тегов
+	{
+		"windwp/nvim-ts-autotag",
+		opts = {},
+	},
 }

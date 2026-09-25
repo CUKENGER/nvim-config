@@ -1,362 +1,131 @@
 local map = vim.keymap.set
-
-map("i", "jk", "<Esc>", { desc = "Esc" })
--- map("n", "q", "<Esc>", { desc = "Esc" })
-
-map("n", "<leader>qq", ":q <CR>", { desc = "Quit" })
-
-map("n", "<leader>yy", ":%y<CR>", { desc = "Yank entire buffer" })
-
--- Navigation
-map("n", "<c-k>", ":wincmd k<CR>", { desc = "Switch up" })
-map("n", "<c-j>", ":wincmd j<CR>", { desc = "Switch down" })
-map("n", "<c-h>", ":wincmd h<CR>", { desc = "Switch left" })
-map("n", "<c-l>", ":wincmd l<CR>", { desc = "Switch right" })
-
--- better up/down
--- map({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'", { desc = "Down", expr = true, silent = true })
-map({ "n", "x" }, "<Down>", "v:count == 0 ? 'gj' : 'j'", { desc = "Down", expr = true, silent = true })
--- map({ "n", "x" }, "k", "v:count == 0 ? 'gk' : 'k'", { desc = "Up", expr = true, silent = true })
-map({ "n", "x" }, "<Up>", "v:count == 0 ? 'gk' : 'k'", { desc = "Up", expr = true, silent = true })
-
--- Открыть Neotree слева
-map("n", "<leader>e", function()
-	vim.cmd("Neotree reveal")
-end, { desc = "Neotree (left)" })
-
--- Splits
-map("n", "|", ":vsplit<CR>", { desc = "Split horizontal" })
-map("n", "\\", ":split<CR>", { desc = "Split vertical" })
-
--- Tabs
-map("n", "<Tab>", ":BufferLineCycleNext<CR>", { desc = "Next tab" })
-map("n", "<s-Tab>", ":BufferLineCyclePrev<CR>", { desc = "Prev tab" })
-map("n", "<leader>xx", ":BufferLinePickClose<CR>", { desc = "Pick tab to close" })
-map("n", "<leader>bo", ":BufferLineCloseOthers<CR>", { desc = "Close others" })
--- map("n", "<leader>bd", ":bdelete<CR>", { desc = "Close current" })
-map("n", "<leader>bd", ":BufDel<CR>", { desc = "Close current buffer" })
-map("n", "<leader>la", "<cmd>lua vim.lsp.buf.code_action()<CR>", { noremap = true, silent = true })
--- map("n", "<leader>bc", ":BufferLineClose<CR>", { desc = "Close current bud buffer" })
-
--- LSP
--- map("n", "<leader>ld", vim.diagnostic.open_float, { desc = "Line Diagnostics" })
-
--- Функция для улучшенного окна диагностик
-local function open_diagnostic_float()
-	local diagnostics = vim.diagnostic.get(0, { lnum = vim.api.nvim_win_get_cursor(0)[1] - 1 })
-	if #diagnostics == 0 then
-		vim.notify("Нет диагностик на текущей строке", vim.log.levels.INFO)
-		return
-	end
-
-	local float_buf, float_win = vim.diagnostic.open_float({
-		border = "rounded",
-		scope = "line",
-		source = "always",
-		header = { " Диагностика ", "DiagnosticHeader" },
-		prefix = function(diagnostic, i)
-			local icon = diagnostic.severity == vim.diagnostic.severity.ERROR and " "
-				or diagnostic.severity == vim.diagnostic.severity.WARN and " "
-				or diagnostic.severity == vim.diagnostic.severity.INFO and " "
-				or " "
-			return string.format("%d. %s", i, icon)
-		end,
-		format = function(diagnostic)
-			local message = diagnostic.message:gsub("\n", " "):sub(1, 70)
-			return string.format("%s: %s", diagnostic.source or "LSP", message)
-		end,
-		max_width = 80,
-		max_height = math.min(#diagnostics + 2, 10),
-		focusable = true,
-		-- Убрали close_events, окно закрывается только явно
-	})
-
-	if not float_buf or not float_win then
-		vim.notify("Не удалось открыть окно диагностики", vim.log.levels.ERROR)
-		return
-	end
-
-	-- Переключаем фокус на окно диагностик
-	vim.api.nvim_set_current_win(float_win)
-
-	-- Настройка клавиш
-	vim.api.nvim_buf_set_keymap(float_buf, "n", "q", "<cmd>q<CR>", { noremap = true, silent = true })
-	vim.api.nvim_buf_set_keymap(float_buf, "n", "y", "", {
-		noremap = true,
-		silent = true,
-		callback = function()
-			local lines = {}
-			for i, diagnostic in ipairs(diagnostics) do
-				local icon = diagnostic.severity == vim.diagnostic.severity.ERROR and "ERROR"
-					or diagnostic.severity == vim.diagnostic.severity.WARN and "WARN"
-					or diagnostic.severity == vim.diagnostic.severity.INFO and "INFO"
-					or "HINT"
-				local message = string.format("[%s] %s: %s", icon, diagnostic.source or "LSP", diagnostic.message)
-				table.insert(lines, message)
-			end
-			vim.fn.setreg("+", table.concat(lines, "\n"))
-			vim.notify("Диагностики скопированы", vim.log.levels.INFO)
-		end,
-	})
-	vim.api.nvim_buf_set_keymap(float_buf, "n", "j", "<Down>", { noremap = true, silent = true })
-	vim.api.nvim_buf_set_keymap(float_buf, "n", "k", "<Up>", { noremap = true, silent = true })
-
-	-- Подсветка
-	for i, diagnostic in ipairs(diagnostics) do
-		local hl_group = diagnostic.severity == vim.diagnostic.severity.ERROR and "DiagnosticError"
-			or diagnostic.severity == vim.diagnostic.severity.WARN and "DiagnosticWarn"
-			or diagnostic.severity == vim.diagnostic.severity.INFO and "DiagnosticInfo"
-			or "DiagnosticHint"
-		vim.api.nvim_buf_add_highlight(float_buf, -1, hl_group, i - 1, 0, -1)
-	end
-end
-
--- Функция для улучшенного окна диагностик
-local function open_diagnostic_float()
-	local diagnostics = vim.diagnostic.get(0, { lnum = vim.api.nvim_win_get_cursor(0)[1] - 1 })
-	if #diagnostics == 0 then
-		vim.notify("Нет диагностик на текущей строке", vim.log.levels.INFO)
-		return
-	end
-
-	local float_buf, float_win = vim.diagnostic.open_float({
-		border = "rounded",
-		scope = "line",
-		source = "always",
-		header = { " Диагностика ", "DiagnosticHeader" },
-		prefix = function(diagnostic, i)
-			local icon = diagnostic.severity == vim.diagnostic.severity.ERROR and " "
-				or diagnostic.severity == vim.diagnostic.severity.WARN and " "
-				or diagnostic.severity == vim.diagnostic.severity.INFO and " "
-				or " "
-			return string.format("%d. %s", i, icon)
-		end,
-		format = function(diagnostic)
-			local message = diagnostic.message:gsub("\n", " "):sub(1, 70)
-			return string.format("%s: %s", diagnostic.source or "LSP", message)
-		end,
-		max_width = 80,
-		max_height = math.min(#diagnostics + 2, 10),
-		focusable = true,
-		-- Убрали close_events, окно закрывается только явно
-	})
-
-	if not float_buf or not float_win then
-		vim.notify("Не удалось открыть окно диагностики", vim.log.levels.ERROR)
-		return
-	end
-
-	-- Переключаем фокус на окно диагностик
-	vim.api.nvim_set_current_win(float_win)
-
-	-- Настройка клавиш
-	vim.api.nvim_buf_set_keymap(float_buf, "n", "q", "<cmd>q<CR>", { noremap = true, silent = true })
-	vim.api.nvim_buf_set_keymap(float_buf, "n", "y", "", {
-		noremap = true,
-		silent = true,
-		callback = function()
-			local lines = {}
-			for i, diagnostic in ipairs(diagnostics) do
-				local icon = diagnostic.severity == vim.diagnostic.severity.ERROR and "ERROR"
-					or diagnostic.severity == vim.diagnostic.severity.WARN and "WARN"
-					or diagnostic.severity == vim.diagnostic.severity.INFO and "INFO"
-					or "HINT"
-				local message = string.format("[%s] %s: %s", icon, diagnostic.source or "LSP", diagnostic.message)
-				table.insert(lines, message)
-			end
-			vim.fn.setreg("+", table.concat(lines, "\n"))
-			vim.notify("Диагностики скопированы", vim.log.levels.INFO)
-		end,
-	})
-	vim.api.nvim_buf_set_keymap(float_buf, "n", "j", "<Down>", { noremap = true, silent = true })
-	vim.api.nvim_buf_set_keymap(float_buf, "n", "k", "<Up>", { noremap = true, silent = true })
-
-	-- Подсветка
-	for i, diagnostic in ipairs(diagnostics) do
-		local hl_group = diagnostic.severity == vim.diagnostic.severity.ERROR and "DiagnosticError"
-			or diagnostic.severity == vim.diagnostic.severity.WARN and "DiagnosticWarn"
-			or diagnostic.severity == vim.diagnostic.severity.INFO and "DiagnosticInfo"
-			or "DiagnosticHint"
-		vim.api.nvim_buf_add_highlight(float_buf, -1, hl_group, i - 1, 0, -1)
-	end
-end
-
 local builtin = require("telescope.builtin")
 
-map("n", "<leader>ld", open_diagnostic_float, { desc = "Показать диагностику строки" })
+-- Базовые действия
+map("i", "jk", "<Esc>", { desc = "Exit insert mode" })
+map("n", "<leader>qq", "<cmd>q<CR>", { desc = "Quit window" })
+map("n", "<leader>yy", "<cmd>%y<CR>", { desc = "Yank entire buffer" })
+map("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "Clear search highlight" })
+map("v", "<leader>p", '"_dP', { desc = "Paste without yank" })
+map("n", "<leader>rp", ':%s/\\<<C-r><C-w>\\>/<C-r>"/g<CR>', { desc = "Replace word under cursor" })
 
--- vim.keymap.set("n", "<leader>ld", open_diagnostic_float, { desc = "Line Diagnostics" })
-map("n", "<leader>lm", ":TSToolsAddMissingImports<CR>", { desc = "Add Missing Imports" })
--- map("n", "gr", vim.lsp.buf.references, { desc = "References" })
--- map("n", "gd", vim.lsp.buf.definition, { desc = "Go to Definition" })
-map("n", "<leader>lr", vim.lsp.buf.rename, { desc = "Rename" })
+-- Навигация по сплитам
+map("n", "<C-h>", "<C-w>h", { desc = "Move to left window" })
+map("n", "<C-j>", "<C-w>j", { desc = "Move to lower window" })
+map("n", "<C-k>", "<C-w>k", { desc = "Move to upper window" })
+map("n", "<C-l>", "<C-w>l", { desc = "Move to right window" })
 
-local function live_grep_right()
-	builtin.live_grep({
-		layout_strategy = "vertical",
-		layout_config = {
-			anchor = "E", -- Справа
-			width = 0.4, -- 40% ширины
-			height = 0.9, -- 90% высоты
-			prompt_position = "top",
-			mirror = false,
-		},
-		mappings = live_grep_mappings,
-	})
-end
+-- Сплиты
+map("n", "|", "<cmd>vsplit<CR>", { desc = "Split vertical" })
+map("n", "\\", "<cmd>split<CR>", { desc = "Split horizontal" })
 
-map("n", "<leader><leader>", builtin.find_files, { desc = "Telescope find files" })
-map("n", "<leader>f/", live_grep_right, { desc = "Telescope live_grep_right" })
-map("n", "<leader>fb", builtin.buffers, { desc = "Telescope buffers" })
-map("n", "<leader>fh", builtin.help_tags, { desc = "Telescope help tags" })
+-- Буферы (Bufferline / BufDel)
+map("n", "<Tab>", "<cmd>BufferLineCycleNext<CR>", { desc = "Next buffer" })
+map("n", "<S-Tab>", "<cmd>BufferLineCyclePrev<CR>", { desc = "Prev buffer" })
+map("n", "<leader>bd", "<cmd>BufDel<CR>", { desc = "Close current buffer" })
+map("n", "<leader>bo", "<cmd>BufferLineCloseOthers<CR>", { desc = "Close other buffers" })
+map("n", "<leader>bx", "<cmd>BufferLinePickClose<CR>", { desc = "Pick buffer to close" })
 
--- map("n", "gr", builtin.lsp_references, { noremap = true, silent = true, desc = "References" })
-local telescope = require("telescope.builtin")
+-- Neo-tree: фокус, если открыт в фоне; закрытие, если курсор уже внутри дерева
+map("n", "<leader>e", function()
+	if vim.bo.filetype == "neo-tree" then
+		vim.cmd("Neotree close")
+	else
+		vim.cmd("Neotree focus reveal")
+	end
+end, { desc = "Focus or close NeoTree" })
+-- Git
+map("n", "<leader>gl", "<cmd>LazyGit<CR>", { desc = "LazyGit client" })
 
-vim.keymap.set("n", "gd", function()
-	telescope.lsp_definitions({})
-end, { noremap = true, silent = true, desc = "Definitions" })
-
-local actions = require("telescope.actions")
-local action_state = require("telescope.actions.state")
-
-vim.keymap.set("n", "gr", function()
-	telescope.lsp_references({
-		-- Обработка результатов
-		entry_maker = function(entry)
-			return {
-				value = entry,
-				display = string.format("%s:%d - %s", entry.filename, entry.lnum, entry.text),
-				ordinal = entry.filename .. ":" .. entry.lnum, -- Для сортировки
-				filename = entry.filename,
-				lnum = entry.lnum,
-				col = entry.col,
-			}
-		end,
-		-- Фильтрация и сортировка
-		results_processor = function(results)
-			local filtered = {}
-			local seen = {}
-			for _, result in ipairs(results) do
-				local key = result.filename .. ":" .. result.lnum .. ":" .. result.col
-				if not seen[key] then
-					table.insert(filtered, result)
-					seen[key] = true
-				end
-			end
-			-- Сортировка по имени файла
-			table.sort(filtered, function(a, b)
-				return a.filename < b.filename
-			end)
-			return filtered
-		end,
-		-- Дополнительные настройки отображения
-		layout_strategy = "vertical",
-		layout_config = {
-			prompt_position = "top",
-			height = 0.8,
-			width = 0.8,
-		},
-	})
-end, { noremap = true, silent = true, desc = "References" })
-
-map("n", "<leader>rp", ':%s/\\<<C-r><C-w>\\>/<C-r>"/g<CR>', { noremap = true, desc = "Replace all" })
-map("v", "<leader>p", '"_dP', { noremap = true, silent = true, desc = "Paste without yank" })
--- conform
--- map("n", "<leader>lf", vim.lsp.buf.format(), { noremap = true, silent = true, desc = "Format" })
-
--- load the session for the current directory
-vim.keymap.set("n", "<leader>ss", function()
-	require("persistence").load()
-end, { desc = "Load the session for the current directory" })
-
--- select a session to load
-vim.keymap.set("n", "<leader>sS", function()
-	require("persistence").select()
-end, { desc = "Select a session to load" })
-
--- load the last session
-vim.keymap.set("n", "<leader>sl", function()
-	require("persistence").load({ last = true })
-end, { desc = "Last session" })
-
--- stop Persistence => session won't be saved on exit
-vim.keymap.set("n", "<leader>sd", function()
-	require("persistence").stop()
-end, { desc = "Session won't be saved" })
-
-vim.keymap.set("n", "<Esc>", ":nohlsearch<CR>", { noremap = true, silent = true, desc = "No Highlight" })
-
-vim.keymap.set("n", "<leader>tt", "<cmd>TroubleToggle<CR>", { desc = "Toggle Trouble" })
-vim.keymap.set("n", "<leader>tw", "<cmd>Trouble workspace_diagnostics<CR>", { desc = "Workspace Diagnostics" })
-vim.keymap.set("n", "<leader>td", "<cmd>Trouble document_diagnostics<CR>", { desc = "Document Diagnostics" })
-vim.keymap.set("n", "<leader>tq", "<cmd>Trouble quickfix<CR>", { desc = "Quickfix List" })
-vim.keymap.set("n", "<leader>tl", "<cmd>Trouble loclist<CR>", { desc = "Location List" })
-
--- Поиск слова под курсором
+-- Telescope (Поиск)
+map("n", "<leader><leader>", builtin.find_files, { desc = "Find files" })
+map("n", "<leader>fb", builtin.buffers, { desc = "Find buffers" })
+map("n", "<leader>fh", builtin.help_tags, { desc = "Help tags" })
 map("n", "<leader>fw", function()
-	local word = vim.fn.expand("<cword>")
-	require("telescope.builtin").live_grep({ default_text = word })
+	builtin.live_grep({ default_text = vim.fn.expand("<cword>") })
 end, { desc = "Live grep word under cursor" })
-
--- Поиск выделенного слова в visual mode
 map("v", "<leader>fw", function()
-	local word = vim.fn.getreg('"')
-	require("telescope.builtin").live_grep({ default_text = word })
-end, { desc = "Live grep selected word" })
+	builtin.live_grep({ default_text = vim.fn.getreg('"') })
+end, { desc = "Live grep visual selection" })
+map("n", "<leader>fg", builtin.live_grep, { desc = "Live grep project" })
 
--- Переход к диагностикам
+-- LSP навигация
+map("n", "gd", builtin.lsp_definitions, { desc = "Goto definition" })
+map("n", "gr", builtin.lsp_references, { desc = "Goto references" })
 map("n", "]e", function()
 	vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })
-end, { desc = "Next Error" })
+end, { desc = "Next error" })
 map("n", "[e", function()
 	vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
-end, { desc = "Previous Error" })
+end, { desc = "Prev error" })
 
-local wk = require("which-key")
+-- Кастомное всплывающее окно диагностик
+local function open_diagnostic_float()
+	local diagnostics = vim.diagnostic.get(0, { lnum = vim.api.nvim_win_get_cursor(0)[1] - 1 })
+	if #diagnostics == 0 then
+		vim.notify("Нет диагностик на текущей строке", vim.log.levels.INFO)
+		return
+	end
 
-wk.add({
-	{ "<leader>e", group = "Neotree" },
-	{ "<leader>f", group = "Telescope" },
-	{ "<leader>fb", "<cmd>Telescope buffers<cr>", desc = "Find Buffers" },
-	{ "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Find Files" },
-	{ "<leader>fh", "<cmd>Telescope help_tags<cr>", desc = "Find Help Tags" },
-	{ "<leader>l", group = "LSP" },
-	-- { "<leader>la", "<cmd>lua vim.lsp.buf.code_action()<cr>", desc = "Code Actions" },
-	-- { "<leader>ld", "<cmd>lua vim.diagnostic.open_float()<cr>", desc = "Line Diagnostics" },
-	{ "<leader>lm", "<cmd>TSToolsAddMissingImports<CR>", desc = "Add Missing Imports" },
-	{ "<leader>lr", "<cmd>lua vim.lsp.buf.rename()<cr>", desc = "Rename" },
-	{ "<leader>w", proxy = "<c-w>", group = "windows" }, -- proxy to window mappings
-	{
-		"<leader>b",
-		group = "buffers",
-		expand = function()
-			return require("which-key.extras").expand.buf()
+	local float_buf, float_win = vim.diagnostic.open_float({
+		border = "rounded",
+		scope = "line",
+		source = "always",
+		header = { " Диагностика ", "DiagnosticHeader" },
+		prefix = function(d, i)
+			local icon = d.severity == vim.diagnostic.severity.ERROR and " "
+				or d.severity == vim.diagnostic.severity.WARN and " "
+				or d.severity == vim.diagnostic.severity.INFO and " "
+				or " "
+			return string.format("%d. %s", i, icon)
 		end,
-	},
-	-- { "<leader>q", "<cmd>qa!<cr>", desc = "Quit" },
-	{ "<leader>xx", "<cmd>BufferLinePickClose<cr>", desc = "Pick tab to close" },
-	{ "<leader>bo", "<cmd>BufferLineCloseOthers<cr>", desc = "Close others" },
-	{ "<leader>bd", desc = "Close current buffer" },
-	{ "<Tab>", "<cmd>BufferLineCycleNext<cr>", desc = "Next tab" },
-	{ "<s-Tab>", "<cmd>BufferLineCyclePrev<cr>", desc = "Prev tab" },
-	{ "|", "<cmd>vsplit<cr>", desc = "Split horizontal" },
-	{ "\\", "<cmd>split<cr>", desc = "Split vertical" },
-	{ "<c-k>", "<cmd>wincmd k<cr>", desc = "Switch up" },
-	{ "<c-j>", "<cmd>wincmd j<cr>", desc = "Switch down" },
-	{ "<c-h>", "<cmd>wincmd h<cr>", desc = "Switch left" },
-	{ "<c-l>", "<cmd>wincmd l<cr>", desc = "Switch right" },
-	{ "j", "v:count == 0 ? 'gj' : 'j'", desc = "Down", mode = { "n", "x" }, expr = true, silent = true },
-	{ "<Down>", "v:count == 0 ? 'gj' : 'j'", desc = "Down", mode = { "n", "x" }, expr = true, silent = true },
-	{ "k", "v:count == 0 ? 'gk' : 'k'", desc = "Up", mode = { "n", "x" }, expr = true, silent = true },
-	{ "<Up>", "v:count == 0 ? 'gk' : 'k'", desc = "Up", mode = { "n", "x" }, expr = true, silent = true },
-	{ "<leader>t", group = "Trouble" },
-	{ "<leader>tt", "<cmd>TroubleToggle<CR>", desc = "Toggle Trouble" },
-	{ "<leader>tw", "<cmd>Trouble workspace_diagnostics<CR>", desc = "Workspace Diagnostics" },
-	{ "<leader>td", "<cmd>Trouble document_diagnostics<CR>", desc = "Document Diagnostics" },
-	{ "<leader>tq", "<cmd>Trouble quickfix<CR>", desc = "Quickfix" },
-	{ "<leader>tl", "<cmd>Trouble loclist<CR>", desc = "Location List" },
-	{ "<leader>s", group = "session / save" },
-	{ "<leader>sa", "<cmd>ASToggle<CR>", desc = "Toggle AutoSave" },
-	-- { "gr", "<cmd>lua vim.lsp.buf.references()<cr>", desc = "References" },
-}, { prefix = "<leader>" })
+		format = function(d)
+			return string.format("%s: %s", d.source or "LSP", d.message:gsub("\n", " "):sub(1, 80))
+		end,
+		max_width = 85,
+		focusable = true,
+	})
+
+	if not float_buf or not float_win then
+		return
+	end
+	vim.api.nvim_set_current_win(float_win)
+	vim.keymap.set("n", "q", "<cmd>q<CR>", { buffer = float_buf, silent = true })
+	vim.keymap.set("n", "y", function()
+		local lines = {}
+		for _, d in ipairs(diagnostics) do
+			table.insert(lines, string.format("[%s] %s: %s", d.source or "LSP", d.code or "", d.message))
+		end
+		vim.fn.setreg("+", table.concat(lines, "\n"))
+		vim.notify("Скопировано в буфер", vim.log.levels.INFO)
+	end, { buffer = float_buf, silent = true })
+end
+
+-- LSP действия (<leader>l)
+map("n", "<leader>ld", open_diagnostic_float, { desc = "Line diagnostics details" })
+map("n", "<leader>la", vim.lsp.buf.code_action, { desc = "Code actions" })
+map("n", "<leader>lr", vim.lsp.buf.rename, { desc = "Rename symbol" })
+map("n", "<leader>lm", "<cmd>TSToolsAddMissingImports<CR>", { desc = "Add missing imports" })
+map("n", "<leader>lf", function()
+	require("conform").format({ async = true, lsp_fallback = true })
+end, { desc = "Format document" })
+
+-- Trouble (<leader>t)
+map("n", "<leader>tt", "<cmd>Trouble diagnostics toggle<CR>", { desc = "Workspace diagnostics" })
+map("n", "<leader>td", "<cmd>Trouble diagnostics toggle filter.buf=0<CR>", { desc = "Document diagnostics" })
+map("n", "<leader>tq", "<cmd>Trouble qflist toggle<CR>", { desc = "Quickfix list" })
+map("n", "<leader>tl", "<cmd>Trouble loclist toggle<CR>", { desc = "Location list" })
+
+-- Сессии Persistence (<leader>s)
+map("n", "<leader>ss", function()
+	require("persistence").load()
+end, { desc = "Load session" })
+map("n", "<leader>sS", function()
+	require("persistence").select()
+end, { desc = "Select session" })
+map("n", "<leader>sl", function()
+	require("persistence").load({ last = true })
+end, { desc = "Last session" })
+map("n", "<leader>sd", function()
+	require("persistence").stop()
+end, { desc = "Stop persistence" })

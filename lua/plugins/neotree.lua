@@ -23,7 +23,7 @@ return {
 				},
 				filesystem = {
 					follow_current_file = {
-						enabled = true,   -- Подсвечивать текущий файл
+						enabled = true, -- Подсвечивать текущий файл
 						leave_dirs_open = true, -- Оставлять директории открытыми
 					},
 					-- hijack_netrw_behavior = "disabled",
@@ -42,14 +42,14 @@ return {
 			})
 
 			-- Привязка клавиш для открытия Neotree с текущим файлом
-			vim.keymap.set("n", "<leader>e", function()
-				require("neo-tree.command").execute({
-					toggle = true,
-					source = "filesystem",
-					position = "left",
-					reveal = true, -- Открыть с текущим файлом и директорией
-				})
-			end, { desc = "Toggle NeoTree with current file" })
+			-- vim.keymap.set("n", "<leader>e", function()
+			-- 	require("neo-tree.command").execute({
+			-- 		toggle = true,
+			-- 		source = "filesystem",
+			-- 		position = "left",
+			-- 		reveal = true, -- Открыть с текущим файлом и директорией
+			-- 	})
+			-- end, { desc = "Toggle NeoTree with current file" })
 		end,
 	},
 }

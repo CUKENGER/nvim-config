@@ -19,7 +19,7 @@ return {
 				transparent_background = false,
 				nvim_tree_darker = true,
 			})
-			vim.cmd.colorscheme("vscode_modern")
+			-- vim.cmd.colorscheme("vscode_modern")
 		end,
 	},
 	{ "catppuccin/nvim", name = "catppuccin", priority = 1000 },

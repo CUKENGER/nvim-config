@@ -15,54 +15,21 @@ return {
 		version = "*",
 		dependencies = {
 			"SmiteshP/nvim-navic",
-			"nvim-tree/nvim-web-devicons", -- optional dependency
+			"nvim-tree/nvim-web-devicons",
 		},
+		opts = {},
 	},
-
-
-
-
-
 
 	{ "Mofiqul/vscode.nvim" },
+
 	{
 		"folke/persistence.nvim",
-		event = "BufReadPre", -- this will only start session saving when an actual file was opened
-		opts = {
-			autosave = false, -- Отключаем автосохранение
-		},
-		keys = {
-			{
-				"<leader>ss",
-				function()
-					require("persistence").load()
-				end,
-				desc = "Load session",
-			},
-			{
-				"<leader>sS",
-				function()
-					require("persistence").select()
-				end,
-				desc = "Select session",
-			},
-			{
-				"<leader>sl",
-				function()
-					require("persistence").load({ last = true })
-				end,
-				desc = "Last session",
-			},
-			{
-				"<leader>sd",
-				function()
-					require("persistence").stop()
-				end,
-				desc = "Stop session",
-			},
-		},
+		event = "BufReadPre",
+		opts = { autosave = false },
 	},
-	{'ojroques/nvim-bufdel'},
+
+	{ "ojroques/nvim-bufdel" },
+	{ "ojroques/nvim-bufdel" },
 	-- {
 	-- 	"pocco81/auto-save.nvim",
 	-- 	event = { "InsertLeave", "TextChanged" },

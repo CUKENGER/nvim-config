@@ -134,7 +134,7 @@ return {
 					lualine_z = { "location" },
 				},
 			})
-			vim.cmd("colorscheme onedark_vivid") -- Применяем тему
+			-- vim.cmd("colorscheme onedark_vivid") -- Применяем тему
 		end,
 	},
 	{
